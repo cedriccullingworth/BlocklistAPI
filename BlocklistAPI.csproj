@@ -5,9 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
-    <DocumentationFile>D:\Projects\BlocklistAPI\bin\Debug\net8.0\BlocklistAPI.xml</DocumentationFile>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <DocumentationFile>D:\Projects\BlocklistAPI\bin\Release\net9.0\BlocklistAPI.xml</DocumentationFile>
+    <AssemblyVersion>1.1.2.1</AssemblyVersion>
+    <FileVersion>1.1.2.1</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

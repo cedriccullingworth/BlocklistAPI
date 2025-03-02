@@ -112,7 +112,7 @@ public class OpenCartDbContext : DbContext
                     .ToTable( "RemoteSite" )
                     .HasMany<DeviceRemoteSite>( )
                     .WithOne( o => o.RemoteSite );
-        //.HasKey( k => k.ID );
+        //.HasKey( k => k.id );
 
         modelBuilder.Entity<Device>( )
             .ToTable( "Device" )
@@ -145,7 +145,7 @@ public class OpenCartDbContext : DbContext
     //                           .FirstOrDefault( f => f.Name == "JSON" ),
     //            FileTypeID = this.FileTypes
     //                           .First( f => f.Name == "JSON" )
-    //                           .ID,
+    //                           .id,
     //            LastDownloaded = null,
     //            Active = true
     //        } );
@@ -189,7 +189,7 @@ public class OpenCartDbContext : DbContext
     //        OpenCartDbContext context = this;
     //        remoteSites = this.RemoteSites
     //                                .Where( w => w.Active || showAll )
-    //                                .Where( w => remoteSiteID == null || w.ID == remoteSiteID )
+    //                                .Where( w => remoteSiteID == null || w.id == remoteSiteID )
     //                                .Where( w => showAll
     //                                              || (
     //                                                    w.MinimumIntervalMinutes == 0
@@ -199,19 +199,19 @@ public class OpenCartDbContext : DbContext
     //                                //.Include( i => i.FileType )
     //                                .Select( r => new RemoteSite( )
     //                                {
-    //                                    ID = r.ID,
+    //                                    id = r.id,
     //                                    Name = r.Name,
     //                                    /* = this.DeviceRemoteSites
-    //                                                         .Where( w => w.RemoteSiteID == r.ID )
+    //                                                         .Where( w => w.RemoteSiteID == r.id )
     //                                                         .Max( m => m.LastDownloaded ),*/
     //                                    //this.LastDownloaded( null, remoteSiteID ),
     //                                    SiteUrl = r.SiteUrl,
     //                                    FileUrls = r.FileUrls,
     //                                    FileTypeID = r.FileTypeID,
-    //                                    FileType = this.FileTypes.Where( f => f.ID == r.FileTypeID ).Select( s => new FileType( ) { ID = s.ID, Name = s.Name, Description = s.Description } ).FirstOrDefault( ),
+    //                                    FileType = this.FileTypes.Where( f => f.id == r.FileTypeID ).Select( s => new FileType( ) { id = s.id, Name = s.Name, Description = s.Description } ).FirstOrDefault( ),
     //                                    // new FileType( )
     //                                    //{
-    //                                    //    ID = r.FileType.ID,
+    //                                    //    id = r.FileType.id,
     //                                    //    Name = r.FileType.Name,
     //                                    //    Description = r.FileType.Description,
     //                                    //},
@@ -222,16 +222,16 @@ public class OpenCartDbContext : DbContext
     //                                .ToList( );
 
     //        //var source = from r in remoteSites
-    //        //             join f in this.FileTypes on r.FileTypeID equals f.ID
+    //        //             join f in this.FileTypes on r.FileTypeID equals f.id
     //        //             where ( r.Active || showAll )
-    //        //             where ( remoteSiteID is null || r.ID == remoteSiteID )
+    //        //             where ( remoteSiteID is null || r.id == remoteSiteID )
     //        //             //join drs in this.DeviceRemoteSites.Where( w => w.DeviceID == deviceID ) on r equals drs.RemoteSite
     //        //select new RemoteSite( )
     //        //{
-    //        //    ID = r.ID,
+    //        //    id = r.id,
     //        //    Name = r.Name,
     //        //    /* = this.DeviceRemoteSites
-    //        //                         .Where( w => w.RemoteSiteID == r.ID )
+    //        //                         .Where( w => w.RemoteSiteID == r.id )
     //        //                         .Max( m => m.LastDownloaded ),*/
     //        //    LastDownloaded = r.LastDownloaded,
     //        //    SiteUrl = r.SiteUrl,
@@ -239,7 +239,7 @@ public class OpenCartDbContext : DbContext
     //        //    FileTypeID = r.FileTypeID,
     //        //    FileType = new FileType( )
     //        //    {
-    //        //        ID = f.ID,
+    //        //        id = f.id,
     //        //        Name = f.Name,
     //        //        Description = f.Description,
     //        //    },
@@ -331,7 +331,7 @@ public class OpenCartDbContext : DbContext
     internal DeviceRemoteSite? SetDownloadedDateTime( int deviceID, int remoteSiteID )
     {
         DeviceRemoteSite? target = this.DeviceRemoteSites.FirstOrDefault( f => f.Device.ID == deviceID && f.RemoteSite.ID == remoteSiteID );
-        //if ( !this.DeviceRemoteSites.Any( a => a.Device.ID == deviceID && a.RemoteSite.ID == remoteSiteID ) )
+        //if ( !this.DeviceRemoteSites.Any( a => a.Device.id == deviceID && a.RemoteSite.id == remoteSiteID ) )
         if ( target is null )
         {
             this.DeviceRemoteSites.Add( new DeviceRemoteSite( )
@@ -356,14 +356,16 @@ public class OpenCartDbContext : DbContext
         {
             try
             {
-                string sqlQuery = $"UPDATE `DeviceRemoteSite` SET `LastDownloaded` = UTC_TIMESTAMP() WHERE DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
-                sqlQuery += $" SELECT `ID`, `DeviceID`, `RemoteSiteID`, `LastDownloaded` FROM `DeviceRemoteSite` WHERE `DeviceID` = {deviceID} AND `RemoteSiteID` = {remoteSiteID};";
-                target = this.DeviceRemoteSites
-                             .FromSqlRaw<DeviceRemoteSite>( sqlQuery, [] )
-                             .ToList( )
-                             .First( );
+                int id = target!.ID;
+                string sqlQuery = $"UPDATE `DeviceRemoteSite` SET `LastDownloaded` = UTC_TIMESTAMP() WHERE `ID` = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
+                //sqlQuery += $" SELECT `ID`, `DeviceID`, `RemoteSiteID`, `LastDownloaded` FROM `DeviceRemoteSite` WHERE `ID` = {id};"; // `DeviceID` = {deviceID} AND `RemoteSiteID` = {remoteSiteID};";
+                //target = this.DeviceRemoteSites
+                //             .FromSqlRaw<DeviceRemoteSite>( sqlQuery, [] )
+                //             .ToList( )
+                //             .First( );
+                this.Database.ExecuteSqlRaw( sqlQuery );
                 this.Entry<DeviceRemoteSite>( target ).Reload( );
-                return this.DeviceRemoteSites.First( f => f.Device.ID == deviceID && f.RemoteSite.ID == remoteSiteID );
+                return this.DeviceRemoteSites.First( f => f.ID == id ); //.First( f => f.Device.ID == deviceID && f.RemoteSite.ID == remoteSiteID );
             }
             catch ( Exception ex )
             {
