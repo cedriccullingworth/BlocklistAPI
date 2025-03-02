@@ -1,0 +1,79 @@
+﻿@model IEnumerable<BlocklistAPI.Models.RemoteSite>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+@*             <th>
+                @Html.DisplayNameFor(model => model.LastDownloaded)
+            </th>
+ *@            <th>
+                @Html.DisplayNameFor(model => model.SiteUrl)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FileUrls)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FileType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Active)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MinimumIntervalMinutes)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+@*             <td>
+                @Html.DisplayFor(modelItem => item.LastDownloaded)
+            </td>
+ *@            <td>
+                @Html.DisplayFor(modelItem => item.SiteUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FileUrls)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FileType.ID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Active)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MinimumIntervalMinutes)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.ID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+</body>
+</html>

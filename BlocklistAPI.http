@@ -1,0 +1,6 @@
+@BlocklistAPI_HostAddress = http://localhost:5197
+
+GET {{BlocklistAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

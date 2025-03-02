@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BlocklistAPI</name>
+    </assembly>
+    <members>
+        <member name="M:BlocklistAPI.Context.ocartDbContext.ListRemoteSites(BlocklistAPI.Models.RemoteSite,System.Boolean)">
+            <summary>
+            NEW: Exclude sites processed less than half and hour ago from the list
+            </summary>
+            <returns>A list of blocklist download sites</returns>
+        </member>
+        <member name="T:BlocklistAPI.Controllers.FileTypesController">
+            <summary>
+            Constructor
+            </summary>
+            <param name="context">The name of the context</param>
+        </member>
+        <member name="M:BlocklistAPI.Controllers.FileTypesController.#ctor(BlocklistAPI.Context.ocartDbContext)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="context">The name of the context</param>
+        </member>
+        <member name="T:BlocklistAPI.Controllers.RemoteSitesController">
+            <summary>
+            Constructor
+            </summary>
+            <param name="context">The name of the context</param>
+        </member>
+        <member name="M:BlocklistAPI.Controllers.RemoteSitesController.#ctor(BlocklistAPI.Context.ocartDbContext)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="context">The name of the context</param>
+        </member>
+        <member name="T:BlocklistAPI.Migrations.Init">
+            <inheritdoc />
+        </member>
+        <member name="M:BlocklistAPI.Migrations.Init.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:BlocklistAPI.Migrations.Init.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:BlocklistAPI.Migrations.Init.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="P:BlocklistAPI.Models.RemoteSite.FileUrls">
+            <summary>
+            A comma-separated array of download file paths
+            </summary>
+        </member>
+        <member name="T:BlocklistAPI.Properties.Resources">
+            <summary>
+              A strongly-typed resource class, for looking up localized strings, etc.
+            </summary>
+        </member>
+        <member name="P:BlocklistAPI.Properties.Resources.ResourceManager">
+            <summary>
+              Returns the cached ResourceManager instance used by this class.
+            </summary>
+        </member>
+        <member name="P:BlocklistAPI.Properties.Resources.Culture">
+            <summary>
+              Overrides the current thread's CurrentUICulture property for all
+              resource lookups using this strongly typed resource class.
+            </summary>
+        </member>
+    </members>
+</doc>
