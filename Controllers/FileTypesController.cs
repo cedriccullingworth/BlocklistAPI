@@ -12,9 +12,9 @@ namespace BlocklistAPI.Controllers;
 [ApiController]
 [Route( "[controller]/filetypes" )]
 
-public class FileTypesController( /* OpenCartDbContext context */ ) : Controller
+public class FileTypesController( /* BlocklistDbContext context */ ) : Controller
 {
-    // private readonly OpenCartDbContext _context = context ?? new OpenCartDbContext( );
+    // private readonly BlocklistDbContext _context = context ?? new BlocklistDbContext( );
 
     //private readonly ILogger<FileTypesController> _logger;
 
@@ -28,7 +28,7 @@ public class FileTypesController( /* OpenCartDbContext context */ ) : Controller
     [Route( "/[controller]/[action]" )]
     public async Task<IActionResult> Index( )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             return Ok(/*View
             (*/
@@ -55,7 +55,7 @@ public class FileTypesController( /* OpenCartDbContext context */ ) : Controller
             return NotFound( );
         }
 
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             var fileType = await context.FileTypes
                                                 .FirstOrDefaultAsync( m => m.ID == id );
@@ -187,7 +187,7 @@ public class FileTypesController( /* OpenCartDbContext context */ ) : Controller
 
     private bool FileTypeExists( int id )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             return context.FileTypes.Any( e => e.ID == id );
         }

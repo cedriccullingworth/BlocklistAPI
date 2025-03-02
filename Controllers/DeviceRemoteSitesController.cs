@@ -13,14 +13,14 @@ namespace BlocklistAPI.Controllers;
 [Route( "[controller]/deviceremotesites" )]
 //[Route( "[controller]" )]
 
-public class DeviceRemoteSitesController( OpenCartDbContext context ) : Controller
+public class DeviceRemoteSitesController( BlocklistDbContext context ) : Controller
 {
     // GET: RemoteSites
     [HttpGet]
     [Route( "/[controller]/[action]/{deviceID}" )]
     public async Task<IActionResult> ListDeviceRemoteSites( int deviceID )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             var remoteSites = context.ListRemoteSites( deviceID, null, true );
             return Ok
@@ -34,7 +34,7 @@ public class DeviceRemoteSitesController( OpenCartDbContext context ) : Controll
     [Route( "/[controller]/[action]/{deviceID},{remoteSiteID}" )]
     public async Task<IActionResult> SetLastDownloaded( int deviceID, int remoteSiteID )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             if ( !context.Devices.Any( d => d.ID == deviceID ) )
             {

@@ -11,9 +11,9 @@ namespace BlocklistAPI.Controllers;
 [ApiController]
 [Route( "[controller]/devices" )]
 
-public class DevicesController( /* OpenCartDbContext context */ ) : Controller
+public class DevicesController( /* BlocklistDbContext context */ ) : Controller
 {
-    // private readonly OpenCartDbContext _context = context ?? new OpenCartDbContext( );
+    // private readonly BlocklistDbContext _context = context ?? new BlocklistDbContext( );
 
     // GET: Devices/Details/MACAddress
     [HttpGet]
@@ -25,7 +25,7 @@ public class DevicesController( /* OpenCartDbContext context */ ) : Controller
             return NotFound( );
         }
 
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             return Ok( context.GetDevice( macAddress ) );
         }

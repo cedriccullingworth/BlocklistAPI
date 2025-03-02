@@ -6,7 +6,7 @@ internal static class Subqueries
 {
     internal static DateTime GetLastDownloadDateTime( int remoteSiteID )
     {
-        using ( OpenCartDbContext context = new( ) )
+        using ( BlocklistDbContext context = new( ) )
         {
             return context.DeviceRemoteSites
                           .Where( r => r.RemoteSite.ID == remoteSiteID )

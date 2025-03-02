@@ -14,14 +14,14 @@ namespace BlocklistAPI.Context;
 /// <summary>
 /// Using the OpenCart Db to house the tables used by the Blocklist API
 /// </summary>
-public class OpenCartDbContext : DbContext
+public class BlocklistDbContext : DbContext
 {
     private string _connectionString = string.Empty;
 
     /// <summary>
     /// Constructor
     /// </summary>
-    public OpenCartDbContext( ) : base( )
+    public BlocklistDbContext( ) : base( )
     {
         this._connectionString = GetConnectionString( );
 
@@ -39,7 +39,7 @@ public class OpenCartDbContext : DbContext
     /// <summary>
     /// Constructor
     /// </summary>
-    public OpenCartDbContext( DbContextOptions<OpenCartDbContext> options ) : base( options )
+    public BlocklistDbContext( DbContextOptions<BlocklistDbContext> options ) : base( options )
     {
         this._connectionString = GetConnectionString( );
 
@@ -89,7 +89,7 @@ public class OpenCartDbContext : DbContext
 
         try
         {
-            optionsBuilder.UseMySQL( this._connectionString ) //, ServerVersion.AutoDetect( _connectionString ) );
+            optionsBuilder.UseSqlServer( this._connectionString ) // .UseMySQL( this._connectionString ) //, ServerVersion.AutoDetect( _connectionString ) );
                           .EnableSensitiveDataLogging( ) // Enable sensitive data logging
                           .LogTo( Console.WriteLine, LogLevel.Information ); // Log SQL queries to the console
 
@@ -186,7 +186,7 @@ public class OpenCartDbContext : DbContext
     //    List<RemoteSite> remoteSites = [];
     //    try
     //    {
-    //        OpenCartDbContext context = this;
+    //        BlocklistDbContext context = this;
     //        remoteSites = this.RemoteSites
     //                                .Where( w => w.Active || showAll )
     //                                .Where( w => remoteSiteID == null || w.id == remoteSiteID )
@@ -280,16 +280,16 @@ public class OpenCartDbContext : DbContext
                                             .ToList( ); // Somehow this query was returning 2X as many entries as there were in the table. This is why it's treated as a distinct list
 
             var sitesBase = this.RemoteSites
-                         .Include( i => i.FileType )
-                         .Where( w => remoteSiteID == null || w.ID == remoteSiteID )
-                         .Where( w => w.Active || showAll )
-                         .Where( w => showAll
-                                       || (
-                                           w.MinimumIntervalMinutes == 0
-                                           || w.LastDownloaded.AddMinutes( w.MinimumIntervalMinutes ) < DateTime.UtcNow
-                                           )
-                               )
-                         .ToList( );
+                                                   .Include( i => i.FileType )
+                                                   .Where( w => remoteSiteID == null || w.ID == remoteSiteID )
+                                                   .Where( w => w.Active || showAll )
+                                                   .Where( w => showAll
+                                                                    || (
+                                                                            w.MinimumIntervalMinutes == 0
+                                                                         || w.LastDownloaded.AddMinutes( w.MinimumIntervalMinutes ) < DateTime.UtcNow
+                                                                       )
+                                                         )
+                                                   .ToList( );
 
             return
                 [ .. (
@@ -303,7 +303,7 @@ public class OpenCartDbContext : DbContext
                         SiteUrl = r.SiteUrl,
                         FileUrls = r.FileUrls,
                         Active = r.Active,
-                        LastDownloaded = d?.LastDownloaded == null ? new DateTime( 2001, 1, 1, 0, 0, 0, 1, 0 ) : d.LastDownloaded,
+                        LastDownloaded = d.LastDownloaded, // == null ? new DateTime( 2001, 1, 1, 0, 0, 0, 1, 0 ) : d.LastDownloaded,
                         FileTypeID = r.FileTypeID,
                         FileType = new FileType( )
                         {
@@ -356,8 +356,12 @@ public class OpenCartDbContext : DbContext
         {
             try
             {
+                if ( target is null )
+                    return null;
+
                 int id = target!.ID;
-                string sqlQuery = $"UPDATE `DeviceRemoteSite` SET `LastDownloaded` = UTC_TIMESTAMP() WHERE `ID` = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
+                //string sqlQuery = $"UPDATE `DeviceRemoteSite` SET `LastDownloaded` = UTC_TIMESTAMP() WHERE `ID` = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
+                string sqlQuery = $"UPDATE DeviceRemoteSite SET LastDownloaded = GETUTCDATE() WHERE ID = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
                 //sqlQuery += $" SELECT `ID`, `DeviceID`, `RemoteSiteID`, `LastDownloaded` FROM `DeviceRemoteSite` WHERE `ID` = {id};"; // `DeviceID` = {deviceID} AND `RemoteSiteID` = {remoteSiteID};";
                 //target = this.DeviceRemoteSites
                 //             .FromSqlRaw<DeviceRemoteSite>( sqlQuery, [] )
@@ -421,7 +425,7 @@ public class OpenCartDbContext : DbContext
         return device;
     }
 
-    internal static FileType? GetFileType( OpenCartDbContext context, int filetypeID )
+    internal static FileType? GetFileType( BlocklistDbContext context, int filetypeID )
     {
         return context.FileTypes
                .Select( s => new FileType( ) { ID = s.ID, Name = s.Name, Description = s.Description } )

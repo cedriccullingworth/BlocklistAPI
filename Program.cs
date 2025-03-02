@@ -1,9 +1,11 @@
+using System.Data.Common;
 using System.Reflection;
 using System.Text.Json.Serialization;
 
 using BlocklistAPI.Classes;
 using BlocklistAPI.Context;
 
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -34,16 +36,18 @@ builder.Services.AddControllers( )
                     opt.JsonSerializerOptions.PropertyNamingPolicy = null; // This is important for ability to deserialise to data models
                 } );
 
-string connectionString = OpenCartDbContext.GetConnectionString( );
+string connectionString = BlocklistDbContext.GetConnectionString( );
 
 GetUrls( out string httpUrl, out string httpsUrl );
 //httpsUrl = conf.GetAppSetting( "HttpsUrl" );
 
-// OpenCartDbContext dbContext = new( );
+// BlocklistDbContext dbContext = new( );
 
-using MySqlConnector.MySqlConnection connection = new( connectionString );
+//using MySqlConnector.MySqlConnection connection = new( connectionString );
+using DbConnection connection = new SqlConnection( connectionString );
 builder.Services
-       .AddDbContext<OpenCartDbContext>( options => options.UseMySQL( connectionString ) ); //, ServerVersion.AutoDetect( connection ) ) );
+       //.AddDbContext<BlocklistDbContext>( options => options.UseMySQL( connectionString ) ); //, ServerVersion.AutoDetect( connection ) ) );
+       .AddDbContext<BlocklistDbContext>( options => options.UseSqlServer( connection ) ); //, ServerVersion.AutoDetect( connection ) ) );
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 var xmlFilename = Path.Combine( AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly( ).GetName( ).Name}.xml" );
@@ -85,7 +89,7 @@ try
         return;
     }
 
-    //using OpenCartDbContext dbContext = new( );
+    //using BlocklistDbContext dbContext = new( );
     //    dbContext.Database.EnsureCreated( );
     //if ( dbContext.Database.ExecuteSqlRaw( "SELECT 1" ) == 1 )
     //{
@@ -96,7 +100,7 @@ try
     //    Console.WriteLine( "Database Connection Failed" );
     //    return;
     //}
-    using ( OpenCartDbContext dbContext = new( ) )
+    using ( BlocklistDbContext dbContext = new( ) )
     {
         try { dbContext.Database.Migrate( ); } catch { }
         //BlocklistAPI.Migrations.Init init = new BlocklistAPI.Migrations.Init( );

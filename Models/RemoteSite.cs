@@ -69,7 +69,7 @@ public class RemoteSite
     [DeleteBehavior( DeleteBehavior.Restrict )]
     public virtual FileType? FileType { get; set; }
 
-    [Column( TypeName = "TINYINT" )]
+    //[Column( TypeName = "TINYINT" )]  // MySQL only
     public bool Active { get; set; } = true;
 
     public int MinimumIntervalMinutes { get; set; } = 30;

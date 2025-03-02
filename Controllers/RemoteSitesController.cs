@@ -16,9 +16,9 @@ namespace BlocklistAPI.Controllers;
 [Route( "[controller]/remotesites" )]
 //[Route( "[controller]" )]
 
-public class RemoteSitesController( /* OpenCartDbContext context */ ) : Controller
+public class RemoteSitesController( /* BlocklistDbContext context */ ) : Controller
 {
-    // private readonly OpenCartDbContext _context = context ?? new OpenCartDbContext( );
+    // private readonly BlocklistDbContext _context = context ?? new BlocklistDbContext( );
 
     //private readonly ILogger<RemoteSitesController> _logger;
 
@@ -39,7 +39,7 @@ public class RemoteSitesController( /* OpenCartDbContext context */ ) : Controll
     [Route( "/[controller]/[action]" )]
     public async Task<IActionResult> ListRemoteSites( int deviceID, int? remoteSiteID, bool showAll = false )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
 
             Device? device = context.Devices.Find( deviceID );
@@ -80,7 +80,7 @@ public class RemoteSitesController( /* OpenCartDbContext context */ ) : Controll
             return Problem( "Unable to find any site matching the ID provided" );
         }
 
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             var remoteSite = await context.RemoteSites
             .Include( r => r.FileType )
@@ -216,7 +216,7 @@ public class RemoteSitesController( /* OpenCartDbContext context */ ) : Controll
 
     private bool RemoteSiteExists( int id )
     {
-        using ( OpenCartDbContext context = new OpenCartDbContext( ) )
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             return context.RemoteSites
                           .Any( e => e.ID == id );
