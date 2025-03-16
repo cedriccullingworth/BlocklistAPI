@@ -10,6 +10,7 @@ namespace BlocklistAPI.Classes;
 /// </summary>
 public class EnumSchemaFilter : ISchemaFilter
 {
+    /// <inheritdoc/>
     public void Apply( OpenApiSchema schema, SchemaFilterContext context )
     {
         if ( context.Type.IsEnum )

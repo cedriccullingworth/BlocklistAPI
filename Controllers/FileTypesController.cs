@@ -8,10 +8,8 @@ namespace BlocklistAPI.Controllers;
 /// <summary>
 /// Constructor
 /// </summary>
-/// <param name="context">The name of the context</param>
 [ApiController]
 [Route( "[controller]/filetypes" )]
-
 public class FileTypesController( /* BlocklistDbContext context */ ) : Controller
 {
     // private readonly BlocklistDbContext _context = context ?? new BlocklistDbContext( );
@@ -23,14 +21,37 @@ public class FileTypesController( /* BlocklistDbContext context */ ) : Controlle
     //    _logger = logger;
     //}
 
-    // GET: FileTypes
+    /// <summary>
+    /// Returns a sorted list of file types
+    /// </summary>
+    /// <returns>A sorted list of file types</returns>
+    [HttpGet] //( Name = "FileTypesListFileTypes" )]
+    [Route( "/[controller]/[action]" )]
+    public async Task<IActionResult> ListFileTypes( )
+    {
+        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
+        {
+            return this.Ok(/*View
+            (*/
+                await context.FileTypes
+                .OrderBy( o => o.Name )
+                .ToListAsync( )
+            //);
+            );
+        }
+    }
+
+    /// <summary>
+    /// Replaced by ListFileTypes. Delete once the lastest Blocklistmanager has been published
+    /// </summary>
+    /// <returns></returns>
     [HttpGet] //( Name = "FileTypesIndex" )]
     [Route( "/[controller]/[action]" )]
     public async Task<IActionResult> Index( )
     {
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
-            return Ok(/*View
+            return this.Ok(/*View
             (*/
                 await context.FileTypes
                 .OrderBy( o => o.Name )
@@ -45,26 +66,26 @@ public class FileTypesController( /* BlocklistDbContext context */ ) : Controlle
     /// </summary>
     /// <param name="id">The ID of the item to fetch</param>
     /// <returns>The file type details matching the ID</returns>
-    // GET: FileTypes/Details/5
     [HttpGet] //( Name = "FileTypesViewDetails" )]
     [Route( "/[controller]/[action]/{id}" )]
-    public async Task<IActionResult> Details( int? id )
+    public IActionResult Details( int? id )
     {
         if ( id == null )
         {
-            return NotFound( );
+            return this.BadRequest( "FileType details: id is required" ); //this.NotFound( );
         }
 
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
-            var fileType = await context.FileTypes
-                                                .FirstOrDefaultAsync( m => m.ID == id );
-            if ( fileType == null )
-            {
-                return NotFound( );
-            }
+            return this.Ok( context.GetFileType( (int)id ) );
+            //var fileType = await context.FileTypes
+            //                                    .FirstOrDefaultAsync( m => m.ID == id );
+            //if ( fileType == null )
+            //{
+            //    return this.NotFound( );
+            //}
 
-            return Ok/*View*/( fileType );
+            //return this.Ok/*View*/( fileType );
         }
     }
 
@@ -185,11 +206,11 @@ public class FileTypesController( /* BlocklistDbContext context */ ) : Controlle
     //    return RedirectToAction( nameof( ListRemoteSites ) );
     //}
 
-    private bool FileTypeExists( int id )
-    {
-        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
-        {
-            return context.FileTypes.Any( e => e.ID == id );
-        }
-    }
+    //private bool FileTypeExists( int id )
+    //{
+    //    using ( BlocklistDbContext context = new BlocklistDbContext( ) )
+    //    {
+    //        return context.FileTypes.Any( e => e.ID == id );
+    //    }
+    //}
 }

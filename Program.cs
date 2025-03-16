@@ -129,7 +129,6 @@ app.UseHttpsRedirection( );
 app.UseAuthorization( );
 app.MapControllers( );
 
-
 //var summaries = new[]
 //{
 //    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
@@ -173,12 +172,12 @@ static void GetUrls( out string httpUrl, out string httpsUrl )
 
     try
     {
-        httpUrl = config.GetSection( "Kestrel" ).GetSection( "Endpoints" ).GetSection( "Http" ).GetSection( "Url" ).Value;
+        httpUrl = config.GetSection( "Kestrel" ).GetSection( "Endpoints" ).GetSection( "Http" ).GetSection( "Url" ).Value!;
     }
     catch { }
     finally
     {
-        httpsUrl = config.GetSection( "Kestrel" ).GetSection( "Endpoints" ).GetSection( "Https" ).GetSection( "Url" ).Value;
+        httpsUrl = config.GetSection( "Kestrel" ).GetSection( "Endpoints" ).GetSection( "Https" ).GetSection( "Url" ).Value!;
     }
 }
 

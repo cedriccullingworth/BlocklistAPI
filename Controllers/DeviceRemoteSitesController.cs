@@ -3,52 +3,78 @@ using BlocklistAPI.Models;
 
 using Microsoft.AspNetCore.Mvc;
 
+using SBS.Utilities;
+
 namespace BlocklistAPI.Controllers;
 
 /// <summary>
 /// Constructor
 /// </summary>
-/// <param name="context">The name of the context</param>
 [ApiController]
 [Route( "[controller]/deviceremotesites" )]
 //[Route( "[controller]" )]
 
-public class DeviceRemoteSitesController( BlocklistDbContext context ) : Controller
+public class DeviceRemoteSitesController( /*BlocklistDbContext context*/ ) : Controller
 {
-    // GET: RemoteSites
+    /// <summary>
+    /// Return the list of remote sites applicable to the deviceID
+    /// </summary>
+    /// <param name="deviceID"></param>
+    /// <returns></returns>
     [HttpGet]
     [Route( "/[controller]/[action]/{deviceID}" )]
-    public async Task<IActionResult> ListDeviceRemoteSites( int deviceID )
+    public IActionResult ListDeviceRemoteSites( int deviceID )
     {
-        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
+
+        try
         {
-            var remoteSites = context.ListRemoteSites( deviceID, null, true );
-            return Ok
-                (
-                    remoteSites
-                );
+            using ( BlocklistDbContext context = new BlocklistDbContext( ) )
+            {
+                var remoteSites = context.ListRemoteSites( deviceID, null, true );
+                return this.Ok
+                    (
+                        remoteSites
+                    );
+            }
+        }
+        catch ( Exception ex )
+        {
+            return this.Problem( $"Query failed: {StringUtilities.ExceptionMessage( "ListDeviceRemoteSites", ex )}" );
         }
     }
 
+    /// <summary>
+    /// Set the date and time that deviceID last downloaded blocklists from remoteSiteID
+    /// </summary>
+    /// <param name="deviceID">The requesting device identifier</param>
+    /// <param name="remoteSiteID">The ID of the download site</param>
+    /// <returns>The revised instance of DeviceRemoteSite</returns>
     [HttpPost]
     [Route( "/[controller]/[action]/{deviceID},{remoteSiteID}" )]
-    public async Task<IActionResult> SetLastDownloaded( int deviceID, int remoteSiteID )
+    public IActionResult SetLastDownloaded( int deviceID, int remoteSiteID )
     {
-        using ( BlocklistDbContext context = new BlocklistDbContext( ) )
+        try
         {
-            if ( !context.Devices.Any( d => d.ID == deviceID ) )
+            using ( BlocklistDbContext context = new BlocklistDbContext( ) )
             {
-                return Problem( "Invalid deviceID )" );
-            }
+                if ( !context.Devices.Any( d => d.ID == deviceID ) )
+                {
+                    return this.BadRequest( "deviceID is invalid" );
+                }
 
-            if ( !context.RemoteSites.Any( r => r.ID == remoteSiteID ) )
-            {
-                return Problem( "Invalid remoteSiteID" );
-            }
+                if ( !context.RemoteSites.Any( r => r.ID == remoteSiteID ) )
+                {
+                    return this.BadRequest( "remoteSiteID is Invalid" );
+                }
 
-            DateTime timeSet = DateTime.UtcNow;
-            DeviceRemoteSite? updated = context.SetDownloadedDateTime( deviceID, remoteSiteID );
-            return Ok( updated );
+                DateTime timeSet = DateTime.UtcNow;
+                DeviceRemoteSite? updated = context.SetDownloadedDateTime( deviceID, remoteSiteID );
+                return this.Ok( updated );
+            }
+        }
+        catch ( Exception ex )
+        {
+            return this.Problem( $"Query failed: {StringUtilities.ExceptionMessage( "SetLastDownloaded", ex )}" );
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 
+using BlocklistAPI.Classes;
 using BlocklistAPI.Models;
 
 using Microsoft.EntityFrameworkCore;
@@ -92,8 +93,6 @@ public class BlocklistDbContext : DbContext
             optionsBuilder.UseSqlServer( this._connectionString ) // .UseMySQL( this._connectionString ) //, ServerVersion.AutoDetect( _connectionString ) );
                           .EnableSensitiveDataLogging( ) // Enable sensitive data logging
                           .LogTo( Console.WriteLine, LogLevel.Information ); // Log SQL queries to the console
-
-
             base.OnConfiguring( optionsBuilder );
         }
         catch ( Exception )
@@ -156,10 +155,48 @@ public class BlocklistDbContext : DbContext
     //}
 
     /// <summary>
-    /// Extract file types as a list
+    /// Adds a device if no record matches the MAC address
     /// </summary>
-    /// <returns></returns>
-    internal List<FileType> ListFileTypes( ) => [ .. this.FileTypes.OrderBy( o => o.Name ) ];
+    /// <param name="macAddress">The MAC address</param>
+    /// <returns>The newly added device</returns>
+    internal Device? AddDevice( string macAddress )
+    {
+        Device? device = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );
+        if ( device == null )
+        {
+            if ( Subqueries.MACAddressIsValid( macAddress ) )
+            {
+                device = new Device( )
+                {
+                    MACAddress = macAddress,
+                };
+
+                try
+                {
+                    // EF Core was insisting on specifying the ID, which is an IDENTITY value, so replaced SaveChanges with this
+                    string sqlQuery = $"INSERT Device ( MACAddress ) VALUES ( '{macAddress}' )";
+                    this.Database.ExecuteSqlRaw( sqlQuery );
+                    this.Entry<Device>( device ).Reload( );
+                }
+                catch ( Exception )
+                {
+                    // Console.WriteLine( StringUtilities.ExceptionMessage( "AddDevice", ex ) );
+                }
+
+                device = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );
+            }
+        }
+
+        return device;
+    }
+
+    //private bool MACAddressIsValid( string macAddress ) => macAddress.Length == 17 && macAddress[ 2 ] == ':' && macAddress[ 5 ] == ':' && macAddress[ 8 ] == ':' && macAddress[ 11 ] == ':' && macAddress[ 14 ] == ':';
+
+    // <summary>
+    // Extract file types as a list
+    // </summary>
+    // <returns></returns>
+    //    internal List<FileType> ListFileTypes( ) => [ .. this.FileTypes.OrderBy( o => o.Name ) ];
 
     /// <summary>
     /// Get the date and time of the most recent download from a remote site
@@ -169,133 +206,58 @@ public class BlocklistDbContext : DbContext
     /// <returns></returns>
     internal DateTime? LastDownloaded( int deviceID, int? remoteSiteID ) =>
         this.DeviceRemoteSites.Where(
-                                        f => f.Device.ID == deviceID
-                                        && ( remoteSiteID == null || f.RemoteSite.ID == remoteSiteID )
+                                        f => f.DeviceID == deviceID
+                                        && ( remoteSiteID == null || f.RemoteSiteID == remoteSiteID )
                                     )
                               .Select( s => s.LastDownloaded )
-                              .Max( );
+                              .FirstOrDefault( );
 
     /// <summary>
-    /// Extract remote sites as a list
-    /// </summary>
-    /// <param name="remoteSiteID">A remote site ID if only fetching one site</param>
-    /// <param name="showAll">If true, list all sites, including those that have been processed recently, otherwise only those whic weren't downloaded in the past 30 minutes</param>
-    /// <returns>A list of blocklist download sites</returns>
-    //internal List<RemoteSite> ListRemoteSites( int? remoteSiteID, bool showAll = false )
-    //{
-    //    List<RemoteSite> remoteSites = [];
-    //    try
-    //    {
-    //        BlocklistDbContext context = this;
-    //        remoteSites = this.RemoteSites
-    //                                .Where( w => w.Active || showAll )
-    //                                .Where( w => remoteSiteID == null || w.id == remoteSiteID )
-    //                                .Where( w => showAll
-    //                                              || (
-    //                                                    w.MinimumIntervalMinutes == 0
-    //                                                 || w.LastDownloaded.AddMinutes( w.MinimumIntervalMinutes ) < DateTime.UtcNow
-    //                                                 )
-    //                                      )
-    //                                //.Include( i => i.FileType )
-    //                                .Select( r => new RemoteSite( )
-    //                                {
-    //                                    id = r.id,
-    //                                    Name = r.Name,
-    //                                    /* = this.DeviceRemoteSites
-    //                                                         .Where( w => w.RemoteSiteID == r.id )
-    //                                                         .Max( m => m.LastDownloaded ),*/
-    //                                    //this.LastDownloaded( null, remoteSiteID ),
-    //                                    SiteUrl = r.SiteUrl,
-    //                                    FileUrls = r.FileUrls,
-    //                                    FileTypeID = r.FileTypeID,
-    //                                    FileType = this.FileTypes.Where( f => f.id == r.FileTypeID ).Select( s => new FileType( ) { id = s.id, Name = s.Name, Description = s.Description } ).FirstOrDefault( ),
-    //                                    // new FileType( )
-    //                                    //{
-    //                                    //    id = r.FileType.id,
-    //                                    //    Name = r.FileType.Name,
-    //                                    //    Description = r.FileType.Description,
-    //                                    //},
-    //                                    Active = r.Active,
-    //                                    MinimumIntervalMinutes = r.MinimumIntervalMinutes,
-    //                                } )
-    //                                .OrderBy( o => o.Name )
-    //                                .ToList( );
-
-    //        //var source = from r in remoteSites
-    //        //             join f in this.FileTypes on r.FileTypeID equals f.id
-    //        //             where ( r.Active || showAll )
-    //        //             where ( remoteSiteID is null || r.id == remoteSiteID )
-    //        //             //join drs in this.DeviceRemoteSites.Where( w => w.DeviceID == deviceID ) on r equals drs.RemoteSite
-    //        //select new RemoteSite( )
-    //        //{
-    //        //    id = r.id,
-    //        //    Name = r.Name,
-    //        //    /* = this.DeviceRemoteSites
-    //        //                         .Where( w => w.RemoteSiteID == r.id )
-    //        //                         .Max( m => m.LastDownloaded ),*/
-    //        //    LastDownloaded = r.LastDownloaded,
-    //        //    SiteUrl = r.SiteUrl,
-    //        //    FileUrls = r.FileUrls,
-    //        //    FileTypeID = r.FileTypeID,
-    //        //    FileType = new FileType( )
-    //        //    {
-    //        //        id = f.id,
-    //        //        Name = f.Name,
-    //        //        Description = f.Description,
-    //        //    },
-    //        //    Active = r.Active,
-    //        //    MinimumIntervalMinutes = r.MinimumIntervalMinutes,
-    //        //};
-
-    //        //if ( !showAll )
-    //        //    source = source.Where( w => w.MinimumIntervalMinutes == 0
-    //        //                                      || w.LastDownloaded.AddMinutes( w.MinimumIntervalMinutes ) < DateTime.UtcNow );
-    //    }
-    //    catch ( Exception ex )
-    //    {
-    //        Console.WriteLine( StringUtilities.ExceptionMessage( "ListRemoteSites", ex ) );
-    //    }
-
-    //    return remoteSites; // [ .. source.OrderBy( o => o.Name ) ];
-    //}
-
-    /// <summary>
-    /// NEW: Exclude sites processed less than half and hour ago from the list
+    /// NEW: Exclude sites processed less than their MinimumIntervalMinutes ago from the list
+    /// This looks like a good candidate for replacment with a stored procedure call
     /// </summary>
     /// <param name="deviceID">The identity of the device we're fetching for</param>
     /// <param name="remoteSiteID">A remote site ID if only fetching one site</param>
     /// <param name="showAll">If true, liust all sites, including those that have been processed recently, otherwise only those whic weren't downloaded in the past 30 minutes</param>
     /// <returns>A list of blocklist download sites</returns>
-    internal List<RemoteSite> ListRemoteSites( int deviceID, int? remoteSiteID, bool showAll = false )
+    internal IEnumerable<RemoteSite>? ListRemoteSites( int deviceID, int? remoteSiteID, bool showAll = false )
     {
         // Finally returning suitable results
-        // .ToList( ) used in all parts to avoid MySQL DbReader still open exception
+        // .ToList( ) used in all parts to avoid DbReader still open exception
         try
         {
             // First, identify only the remote sites that are associated with the device, with that last download date and time
-            var drs = this.DeviceRemoteSites
-                                            .Where( w => w.Device.ID == deviceID )
-                                            .Select( s => new { s.RemoteSiteID, s.LastDownloaded } )
-                                            .Distinct( )
-                                            .ToList( ); // Somehow this query was returning 2X as many entries as there were in the table. This is why it's treated as a distinct list
+            // Somehow this query was returning 2X as many entries as there were in the table. This is why it's treated as a distinct list
+            IQueryable<DeviceRemoteSite> drs = this.DeviceRemoteSites
+                                            .Where( w => w.DeviceID == deviceID );
+            //                                          .Select( s => new SiteLastDownloaded( s.RemoteSiteID, s.LastDownloaded ) )
+            //                                          .ToList( );
+            //.Distinct( )
+            //.ToList( );
 
-            var sitesBase = this.RemoteSites
+            IQueryable<RemoteSite> sitesBase = this.RemoteSites
                                                    .Include( i => i.FileType )
                                                    .Where( w => remoteSiteID == null || w.ID == remoteSiteID )
                                                    .Where( w => w.Active || showAll )
                                                    .Where( w => showAll
-                                                                    || (
+                                                                    ||
                                                                             w.MinimumIntervalMinutes == 0
                                                                          || w.LastDownloaded.AddMinutes( w.MinimumIntervalMinutes ) < DateTime.UtcNow
-                                                                       )
-                                                         )
-                                                   .ToList( );
+
+                                                         );
+            //.ToList( );
+            //.ToList( );
+
+            if ( drs.Count( ) == 0 )
+            {
+                drs = this.AddRemoteSiteDeviceLinks( deviceID, sitesBase );
+            }
 
             return
-                [ .. (
+                 (
                     from r in sitesBase
                     join d in drs on r.ID equals d.RemoteSiteID into drsGroup
-                    from d in drsGroup.DefaultIfEmpty( )
+                    from d in drsGroup.DefaultIfEmpty( ) // We've added any missing links; this shouldn't be necessary
                     select new RemoteSite( )
                     {
                         ID = r.ID,
@@ -314,7 +276,8 @@ public class BlocklistDbContext : DbContext
                         MinimumIntervalMinutes = r.MinimumIntervalMinutes
                     }
                 )
-            .OrderBy( o => o.Name ) ];
+            .OrderBy( o => o.Name )
+            .ToList( );
         }
         catch ( Exception ex )
         {
@@ -324,13 +287,48 @@ public class BlocklistDbContext : DbContext
     }
 
     /// <summary>
+    /// Creates DeviceRemoteSite links where not already linked
+    /// </summary>
+    /// <param name="deviceID"></param>
+    /// <param name="sitesBase"></param>
+    /// <returns></returns>
+    private IQueryable<DeviceRemoteSite> AddRemoteSiteDeviceLinks( int deviceID, IQueryable<RemoteSite> sitesBase )
+    {
+        var existing = this.DeviceRemoteSites
+                                             .Where( w => w.DeviceID == deviceID )
+                                             .Select( s => s.RemoteSiteID )
+                                             .OrderBy( o => o );
+        // Generate device remote site entries for all remote sites
+        foreach ( RemoteSite site in sitesBase.Where( w => !existing.Contains( w.ID ) ) )
+        {
+            this.DeviceRemoteSites.Add( new DeviceRemoteSite( )
+            {
+                Device = this.Devices.First( f => f.ID == deviceID ),
+                DeviceID = deviceID,
+                RemoteSite = site,
+                RemoteSiteID = site.ID,
+                LastDownloaded = new DateTime( 2001, 1, 1, 0, 0, 0, 1, 0 )
+            } );
+        }
+
+        this.SaveChanges( );
+        return this.DeviceRemoteSites
+                   .Where( w => w.DeviceID == deviceID );
+        //.Select( s => new SiteLastDownloaded( s.RemoteSiteID, s.LastDownloaded ) )
+        //.ToList( );
+        //.Distinct( );
+        //.ToList( );
+        //        return drs;
+    }
+
+    /// <summary>
     /// Mark the date and time of a download from a remote site for a device
     /// </summary>
     /// <param name="deviceID"></param>
     /// <param name="remoteSiteID"></param>
     internal DeviceRemoteSite? SetDownloadedDateTime( int deviceID, int remoteSiteID )
     {
-        DeviceRemoteSite? target = this.DeviceRemoteSites.FirstOrDefault( f => f.Device.ID == deviceID && f.RemoteSite.ID == remoteSiteID );
+        DeviceRemoteSite? target = this.DeviceRemoteSites.FirstOrDefault( f => f.DeviceID == deviceID && f.RemoteSiteID == remoteSiteID );
         //if ( !this.DeviceRemoteSites.Any( a => a.Device.id == deviceID && a.RemoteSite.id == remoteSiteID ) )
         if ( target is null )
         {
@@ -359,6 +357,7 @@ public class BlocklistDbContext : DbContext
                 if ( target is null )
                     return null;
 
+                // Performance on this is still not ideal, but regarded as beyond my control (This runs on a remote server against a remote database which I do not control
                 int id = target!.ID;
                 //string sqlQuery = $"UPDATE `DeviceRemoteSite` SET `LastDownloaded` = UTC_TIMESTAMP() WHERE `ID` = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
                 string sqlQuery = $"UPDATE DeviceRemoteSite SET LastDownloaded = GETUTCDATE() WHERE ID = {id};"; //  DeviceID = {deviceID} AND RemoteSiteID = {remoteSiteID}; ";
@@ -385,14 +384,30 @@ public class BlocklistDbContext : DbContext
     //        .FirstOrDefault( f => f.DeviceID == deviceID && ( remoteSiteID == null || f.RemoteSiteID == remoteSiteID ) )
     //        .LastDownloaded ?? new DateTime( 2001, 1, 1 );
 
-    internal DbSet<RemoteSite> RemoteSites { get; set; }
+    /// <summary>
+    /// Represents the data in the RemoteSite table
+    /// </summary>
+    public DbSet<RemoteSite> RemoteSites { get; set; }
 
-    internal DbSet<FileType> FileTypes { get; set; }
+    /// <summary>
+    /// Represents the data in the FileType table
+    /// </summary>
+    public DbSet<FileType> FileTypes { get; set; }
 
-    internal DbSet<Device> Devices { get; set; }
+    /// <summary>
+    /// Represents the data in the Device table
+    /// </summary>
+    public DbSet<Device> Devices { get; set; }
 
-    internal DbSet<DeviceRemoteSite> DeviceRemoteSites { get; set; }
+    /// <summary>
+    /// Represents the data in the DeviceRemoteSite table
+    /// </summary>
+    public DbSet<DeviceRemoteSite> DeviceRemoteSites { get; set; }
 
+    /// <summary>
+    /// Verify that the data need to start exists
+    /// </summary>
+    /// <returns>True if there are file types and remote sites</returns>
     internal bool ConfirmStartupDataExists( )
     {
         bool dataExists = this.FileTypes.Count( ) >= 9 && this.RemoteSites.Count( ) >= 24;
@@ -408,30 +423,41 @@ public class BlocklistDbContext : DbContext
         return dataExists;
     }
 
+    /// <summary>
+    /// Returns the device tuple matching the MAC address
+    /// Note: Adds the MACAddress data if no match is found
+    /// </summary>
+    /// <param name="macAddress">The MAC address</param>
+    /// <returns>The matching device tuple</returns>
     internal Device? GetDevice( string macAddress )
     {
         Device? device = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );
         if ( device == null )
         {
-            device = new Device( )
-            {
-                MACAddress = macAddress
-            };
-            this.Devices.Add( device );
-            this.SaveChanges( );
-            device = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );
+            device = this.AddDevice( macAddress );
         }
 
         return device;
     }
 
-    internal static FileType? GetFileType( BlocklistDbContext context, int filetypeID )
-    {
-        return context.FileTypes
+    /// <summary>
+    /// Returns the file type with ID matching filetypeID
+    /// </summary>
+    /// <param name="filetypeID"></param>
+    /// <returns>The file type with ID matching filetypeID</returns>
+    internal FileType? GetFileType( /*BlocklistDbContext context, */int filetypeID ) => this.FileTypes
                .Select( s => new FileType( ) { ID = s.ID, Name = s.Name, Description = s.Description } )
-               .FirstOrDefault( f => f.ID == filetypeID );//if ( fileType == null )//{//    fileType = new Device( )//    {//        MACAddress = macAddress//    };//    this.Devices.Add( fileType );//    this.SaveChanges( );//    fileType = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );//}//return fileType;
-    }
+               .FirstOrDefault( f => f.ID == filetypeID );
+    //{
+    //    return this.FileTypes
+    //           .Select( s => new FileType( ) { ID = s.ID, Name = s.Name, Description = s.Description } )
+    //           .FirstOrDefault( f => f.ID == filetypeID );//if ( fileType == null )//{//    fileType = new Device( )//    {//        MACAddress = macAddress//    };//    this.Devices.Add( fileType );//    this.SaveChanges( );//    fileType = this.Devices.FirstOrDefault( f => f.MACAddress == macAddress );//}//return fileType;
+    //}
 
+    /// <summary>
+    /// Add the initial file types if they don't exist
+    /// </summary>
+    /// <returns>true if successful</returns>
     private bool LoadFileTypes( )
     {
         bool result = this.FileTypes.Count( ) >= 9;
@@ -472,6 +498,10 @@ public class BlocklistDbContext : DbContext
         return result;
     }
 
+    /// <summary>
+    /// Add the initial remote sites if they don't exist
+    /// </summary>
+    /// <returns>true if successful</returns>
     private bool LoadRemoteSites( )
     {
         bool result = this.RemoteSites.Count( ) >= 24;

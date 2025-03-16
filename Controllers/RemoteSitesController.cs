@@ -11,33 +11,23 @@ namespace BlocklistAPI.Controllers;
 /// <summary>
 /// Constructor
 /// </summary>
-/// <param name="context">The name of the context</param>
 [ApiController]
 [Route( "[controller]/remotesites" )]
 //[Route( "[controller]" )]
 
 public class RemoteSitesController( /* BlocklistDbContext context */ ) : Controller
 {
-    // private readonly BlocklistDbContext _context = context ?? new BlocklistDbContext( );
-
-    //private readonly ILogger<RemoteSitesController> _logger;
-
-    //public RemoteSitesController( ILogger<RemoteSitesController> logger )
-    //{
-    //    _logger = logger;
-    //}
-
     // GET: RemoteSites
     /// <summary>
     /// Extract remote sites as a list
     /// </summary>
     /// <param name="deviceID">The ID of the device we're fetching for</param>
     /// <param name="remoteSiteID">A remote site ID if only fetching one site</param>
-    /// <param name="showAll">If true, list all sites including those that have been processed recently, otherwise only those which weren't downloaded in the past 30 minutes</param>
+    /// <param name="showAll">If true, list all sites including inactive sites and those that have been processed too recently, otherwise only those which weren't downloaded too recently</param>
     /// <returns>A list of blocklist download sites</returns>
     [HttpGet] //( Name = "RemoteSitesIndex" )]
     [Route( "/[controller]/[action]" )]
-    public async Task<IActionResult> ListRemoteSites( int deviceID, int? remoteSiteID, bool showAll = false )
+    public IActionResult ListRemoteSites( int deviceID, int? remoteSiteID, bool showAll = false )
     {
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
@@ -45,22 +35,17 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
             Device? device = context.Devices.Find( deviceID );
             if ( device is not null )
             {
-                return Ok/*View*/
-                    (
-                        context.ListRemoteSites( deviceID, remoteSiteID, showAll )
-                    // Finally returning suitable results
-                    // First, identify only the remote sites that are associated with the device, with that last download date and time
-                    //source.OrderBy( o => o.Name )
-                    //      .ToListAsync( )
-                    //_context.RemoteSites.ToList( )
-                    );
+                return this.Ok/*View*/
+                (
+                    context.ListRemoteSites( deviceID, remoteSiteID, showAll )
+                );
             }
             else
             {
                 if ( deviceID == 0 )
-                    return Problem( "Please enter a valid deviceID. deviceID is required." );
+                    return this.BadRequest( "Please enter a valid deviceID. deviceID is required." );
                 else
-                    return Problem( "Unable to find data using the deviceID and/or remoteSiteID provided" );
+                    return this.BadRequest( "Unable to find data using the deviceID and/or remoteSiteID provided" );
             }
         }
     }
@@ -75,9 +60,9 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
     [Route( "/[controller]/[action]/{id}" )]
     public async Task<IActionResult> Details( int id )
     {
-        if ( !RemoteSiteExists( id ) )
+        if ( !this.RemoteSiteExists( id ) )
         {
-            return Problem( "Unable to find any site matching the ID provided" );
+            return this.BadRequest( "Unable to find any site matching the ID provided" );
         }
 
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
@@ -87,13 +72,14 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
             .FirstOrDefaultAsync( m => m.ID == id );
             if ( remoteSite == null )
             {
-                return NotFound( );
+                return this.NotFound( );
             }
 
-            return Ok/*View*/( remoteSite );
+            return this.Ok/*View*/( remoteSite );
         }
     }
 
+    #region Default endpoints which shouldn't be exposed
     // GET: RemoteSites/Create
     //[HttpGet] //( Name = "RemoteSitesCreateView" )]
     //[Route( "/[controller]/[action]" )]
@@ -213,7 +199,13 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
     //    await _context.SaveChangesAsync( );
     //    return RedirectToAction( nameof( ListRemoteSites ) );
     //}
+    #endregion Default endpoints which shouldn't be exposed
 
+    /// <summary>
+    /// Confirm the a remote site matching 'id' exists
+    /// </summary>
+    /// <param name="id">The ID of the site to validate</param>
+    /// <returns>True if it exists</returns>
     private bool RemoteSiteExists( int id )
     {
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
