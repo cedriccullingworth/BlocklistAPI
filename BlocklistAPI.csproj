@@ -20,6 +20,12 @@
   <ItemGroup>
     <Compile Remove="20250109095816_Init.cs" />
     <Compile Remove="20250109095816_Init.Designer.cs" />
+    <!--<Compile Remove="20250131092529_MySQLInit.cs" />
+    <Compile Remove="20250131092529_MySQLInit.Designer.cs" />
+    <Compile Remove="20250227111235_Sync270225.cs" />
+    <Compile Remove="20250227111235_Sync270225.Designer.cs" />-->
+    <Compile Remove="Context\ocartDbContext.cs" />
+    <Compile Remove="Context\OpenCartDbContext.cs" />
     <Compile Remove="Controllers\WeatherForecastController.cs" />
   </ItemGroup>
 
@@ -41,6 +47,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="SBS.Encryption2022">
+      <HintPath>..\SBS.Encryption2022\bin\Release\net8.0\SBS.Encryption2022.dll</HintPath>
+    </Reference>
     <Reference Include="SBS.Utilities">
       <HintPath>..\SBS.Utilities\bin\Release\net8.0\SBS.Utilities.dll</HintPath>
       <Private>True</Private>

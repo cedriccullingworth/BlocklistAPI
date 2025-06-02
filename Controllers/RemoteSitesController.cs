@@ -4,6 +4,8 @@ using BlocklistAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
+using SBS.Encryption2022;
+
 namespace BlocklistAPI.Controllers;
 
 /* MAC Address for tests: 2C:3B:70:0C:DA:F5 */
@@ -68,11 +70,20 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
             var remoteSite = await context.RemoteSites
-            .Include( r => r.FileType )
-            .FirstOrDefaultAsync( m => m.ID == id );
+                                          .Include( r => r.FileType )
+                                          .FirstOrDefaultAsync( m => m.ID == id );
             if ( remoteSite == null )
             {
                 return this.NotFound( );
+            }
+
+            if ( !string.IsNullOrEmpty( remoteSite.KeyValue ) )
+            {
+                using ( Encrypter encrypter = new Encrypter( ) )
+                {
+                    string errMsg = string.Empty;
+                    remoteSite.KeyValue = encrypter.Encrypt( remoteSite.KeyValue, out errMsg );
+                }
             }
 
             return this.Ok/*View*/( remoteSite );

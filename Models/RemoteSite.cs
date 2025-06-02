@@ -101,6 +101,11 @@ public class RemoteSite
     /// </summary>
     public int MinimumIntervalMinutes { get; set; } = 30;
 
+    /// <summary>
+    /// The key value for the remote site, used for authentication or other purposes
+    /// </summary>
+    public string? KeyValue { get; set; } = null;
+
     // <summary>
     // The DeviceRemoteSites referencing this RemoteSite
     // </summary>
