@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <DocumentationFile>D:\Projects\BlocklistAPI\bin\Release\net9.0\BlocklistAPI.xml</DocumentationFile>
-    <AssemblyVersion>1.1.2.1</AssemblyVersion>
-    <FileVersion>1.1.2.1</FileVersion>
+    <AssemblyVersion>1.1.3.0</AssemblyVersion>
+    <FileVersion>1.1.3.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>

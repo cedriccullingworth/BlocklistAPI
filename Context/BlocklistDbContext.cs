@@ -278,7 +278,8 @@ public class BlocklistDbContext : DbContext
                             Description = r.FileType.Description
                         },
                         MinimumIntervalMinutes = r.MinimumIntervalMinutes,
-                        KeyValue = string.IsNullOrEmpty( r.KeyValue ) ? string.Empty : encrypter.Encrypt( r.KeyValue, out errMsg ) // Note: string.Empty encrypted is a 64 char string, a key value is longer
+                        KeyValue = string.IsNullOrEmpty( r.KeyValue ) ? string.Empty : encrypter.Encrypt( r.KeyValue, out errMsg ), // Note: string.Empty encrypted is a 64 char string, a key value is longer
+                        APIArguments = r.APIArguments,
                     }
                 )
             .OrderBy( o => o.Name )

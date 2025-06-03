@@ -106,6 +106,11 @@ public class RemoteSite
     /// </summary>
     public string? KeyValue { get; set; } = null;
 
+    /// <summary>
+    /// A comma-separated list of arguments to be passed to the API when downloading
+    /// </summary>
+    public string? APIArguments { get; set; } = null;
+
     // <summary>
     // The DeviceRemoteSites referencing this RemoteSite
     // </summary>

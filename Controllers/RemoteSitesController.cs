@@ -33,7 +33,6 @@ public class RemoteSitesController( /* BlocklistDbContext context */ ) : Control
     {
         using ( BlocklistDbContext context = new BlocklistDbContext( ) )
         {
-
             Device? device = context.Devices.Find( deviceID );
             if ( device is not null )
             {
